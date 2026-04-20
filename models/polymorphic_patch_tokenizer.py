@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from timm.models.layers import trunc_normal_ # pip install timm==1.0.17
 from fastai.basics import * # pip install fastai==2.8.6 pip install ipython
-from layers.SSN_layers import *
+from layers.ppt_layers import *
 from layers.RevIN_em import RevIN_em
     
 # 下标映射
