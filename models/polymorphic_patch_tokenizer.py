@@ -5,7 +5,7 @@ from fastai.basics import * # pip install fastai==2.8.6 pip install ipython
 from layers.SSN_layers import *
 from layers.RevIN_em import RevIN_em
     
-# 26/3/6 下标映射
+# 下标映射
 def restore_and_merge_intervals(idx, shape_size, stride, seq_len=None):
     """
     将 patch 索引还原为原始时间区间，并合并为无重叠区间。
@@ -114,9 +114,9 @@ class ChangeAwareAttentionHead(nn.Module):
         g = torch.sigmoid(self.gate)
         score = g * s1 + (1 - g) * s2
         return torch.sigmoid(score)
+# PolymorphicPatchTokenizer
 
-
-class SoftShapeNet(nn.Module):
+class PolymorphicPatchTokenizer(nn.Module):
     def __init__(self, seq_len, shape_size, num_channels, emb_dim, sparse_rate,
                  depth, num_classes, raw, affine, subtract_last, RevIN,
                  alpha, attention_head_dim, num_experts=8, stride=2):
@@ -250,50 +250,3 @@ class SoftShapeNet(nn.Module):
         global_idx = [gi[gi != -1] for gi in global_idx] # 去除全局索引中的虚拟索引-1，得到最终保留的token的全局索引列表
 
         return cls_logits, moe_loss, global_idx, x_norm, x[:, :len(global_idx), :]
-    # def forward(
-    #     self,
-    #     x,
-    #     stats,
-    #     num_epoch_i=100,
-    #     warm_up_epoch=50,
-    # ):
-    #     x_norm, _ = self.revin_r_layer(x, 'norm')
-    #     x_emb = self.main_projection(x_norm)
-    #     stats_emb = self.stats_projection(stats)
-    #     x = self.alpha*x_emb + (1 - self.alpha)*stats_emb
-    #     x = x.permute(0, 2, 1)
-
-    #     x = self.shape_embed(x)
-    #     x = x + self.pos_embed
-    #     x = self.pos_drop(x)
-
-    #     moe_loss = None
-    #     d = 0
-    #     end_attn_x_score = None
-
-    #     for shape_blk in self.shape_blocks:
-    #         depth_remain_ratio = 1.0 - self.sparse_ratio_d[d]
-    #         if num_epoch_i < warm_up_epoch:
-    #             depth_remain_ratio = 1.0
-
-    #         judge_end = False
-    #         if (d + 1) == self.depth:
-    #             judge_end = True
-
-    #         x, _temp_mloss, end_attn_x_score, idx = shape_blk(x, end_depth=judge_end, remain_ratio=depth_remain_ratio)
-
-    #         d = d + 1
-
-    #         if moe_loss == None:
-    #             moe_loss = _temp_mloss
-    #         else:
-    #             moe_loss = moe_loss + _temp_mloss
-        
-    #     selected_patch_tokens = x[:, :-1, :] if idx is not None and x.shape[1] > 1 else x
-    #     idx = restore_and_merge_intervals(idx, self.shape_size, self.shape_stride, seq_len=self.seq_len)
-
-    #     instance_logits = self.head(x)
-    #     weighted_instance_logits = instance_logits * end_attn_x_score
-    #     cls_logits = torch.mean(weighted_instance_logits, dim=1)
-
-    #     return cls_logits, moe_loss, idx, x_norm, selected_patch_tokens

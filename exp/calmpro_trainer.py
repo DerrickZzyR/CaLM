@@ -9,8 +9,8 @@ from utils.utils import ridge_regularize, prox_update, regularize, convert_to_li
 from utils.visual_utils import ssn_vis
 from utils.llm_utils import load_baseline_gc_lag1, _query_patch_description_only
 from exp.base_trainer import BaseTrainer
-from models.cMLPRevIN import cMLPRevIN
-from models.SoftShapeNet import SoftShapeNet
+from models.tc_mlp import TCMLP
+from models.polymorphic_patch_tokenizer import PolymorphicPatchTokenizer
 from torch.utils.data import DataLoader, Subset
 import json
 from models.OpenClipTextEncoder import OpenClipTextEncoder
@@ -29,7 +29,7 @@ class calmproTrainer(BaseTrainer):
 
         train_dl = DataLoader(train_dataset, batch_size=args.backbone_batch_size, shuffle=True)
 
-        cmlp = cMLPRevIN(num_series=F, lag=args.win_size, affine=0, subtract_last=0).to(device=args.device)
+        cmlp = TCMLP(num_series=F, lag=args.win_size, affine=0, subtract_last=0).to(device=args.device)
 
         cmlp.train()
         batch_lam_ridge = args.lam_ridge / len(train_dl)
@@ -153,13 +153,13 @@ class calmproTrainer(BaseTrainer):
         else:
             raise FileNotFoundError(f"Error: {max_feature_path} not found. Run preprocessor first!")
 
-        cmlp = cMLPRevIN(num_series=F, lag=args.win_size, affine=0, subtract_last=0).to(device=args.device)
+        cmlp = TCMLP(num_series=F, lag=args.win_size, affine=0, subtract_last=0).to(device=args.device)
         cmlp.load_state_dict(torch.load(args.ckpt_path, map_location=args.device))
         cmlp.eval()
         for param in cmlp.parameters():
             param.requires_grad = False
 
-        ss_net = SoftShapeNet(
+        ss_net = PolymorphicPatchTokenizer(
             seq_len=T - args.win_size, 
             shape_size=args.shape_size, 
             num_channels=args.num_channels, 
@@ -380,11 +380,11 @@ class calmproTrainer(BaseTrainer):
         )
 
         # load model
-        cmlp = cMLPRevIN(num_series=F, lag=args.win_size).to(args.device)
+        cmlp = TCMLP(num_series=F, lag=args.win_size).to(args.device)
         cmlp.load_state_dict(torch.load(args.ckpt_path, map_location=args.device))
         cmlp.eval()
 
-        ss_net = SoftShapeNet(
+        ss_net = PolymorphicPatchTokenizer(
             seq_len=T - args.win_size, 
             shape_size=args.shape_size, 
             num_channels=args.num_channels, 
@@ -515,11 +515,11 @@ class calmproTrainer(BaseTrainer):
         else:
             raise FileNotFoundError(f"Error: {max_fea_path} not found. Run preprocessor first!")
 
-        cmlp = cMLPRevIN(num_series=F, lag=args.win_size, affine=0, subtract_last=0).to(args.device)
+        cmlp = TCMLP(num_series=F, lag=args.win_size, affine=0, subtract_last=0).to(args.device)
         cmlp.load_state_dict(torch.load(args.ckpt_path, map_location=args.device))
         cmlp.eval()
 
-        ss_net = SoftShapeNet(
+        ss_net = PolymorphicPatchTokenizer(
             seq_len=T - args.win_size,
             shape_size=args.shape_size,
             num_channels=args.num_channels,
@@ -680,11 +680,11 @@ class calmproTrainer(BaseTrainer):
         train_dataset = UnifiedDataset(root_path=args.sta_root_path, flag='train')
         _, T_full, F = train_dataset.X.shape
 
-        cmlp = cMLPRevIN(num_series=F, lag=args.win_size, affine=0, subtract_last=0).to(device=args.device)
+        cmlp = TCMLP(num_series=F, lag=args.win_size, affine=0, subtract_last=0).to(device=args.device)
         cmlp.load_state_dict(torch.load(args.ckpt_path, map_location=args.device))
         cmlp.eval()
 
-        ss_net = SoftShapeNet(
+        ss_net = PolymorphicPatchTokenizer(
             seq_len=T_full - args.win_size, 
             shape_size=args.shape_size, 
             num_channels=args.num_channels, 

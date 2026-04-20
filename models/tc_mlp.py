@@ -4,18 +4,16 @@ from utils.utils import activation_helper
 from layers.MLP import MLP
 from layers.RevIN_em import RevIN_em
 
-class cMLPRevIN(nn.Module):
+class TCMLP(nn.Module):
     def __init__(self, num_series, lag, affine, subtract_last, hidden=[256, 128, 64], activation='relu'):
         '''
-        cMLP model with one MLP per time series.
-
         Args:
           num_series: dimensionality of multivariate time series.
           lag: number of previous time points to use in prediction.
           hidden: list of number of hidden units per layer.
           activation: nonlinearity at each layer.
         '''
-        super(cMLPRevIN, self).__init__()
+        super(TCMLP, self).__init__()
         self.p = num_series
         self.lag = lag
         self.revin_layer = RevIN_em(num_features=num_series, affine=affine, subtract_last=subtract_last)
